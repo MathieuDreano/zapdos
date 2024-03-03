@@ -36,6 +36,7 @@ class Reward:
         self.knn_index = None
         self.init_knn()
         self.seen_coords = {}
+        self.seen_locations = set()
         self.init_map_mem()
         self.cur_size = 0
 
@@ -54,6 +55,7 @@ class Reward:
         self.seen_pokemons = 0
         self.base_explore = 0
         self.seen_coords = {}
+        self.seen_locations = set()
         if self.use_screen_explore:
             self.init_knn()
         else:
@@ -71,8 +73,9 @@ class Reward:
             'op_lvl': self.reward_scale * self.max_opponent_level * 1,
             'dead': self.reward_scale * self.died_count * -0.1,
             'badge': self.reward_scale * self.reader.get_badges() * 5,
-            'seen_poke': self.reward_scale * self.seen_pokemons * 1,
-            'explore': self.reward_scale * self.compute_explore_reward()
+            'seen_pokemons': self.reward_scale * self.seen_pokemons * 1,
+            'explore': self.reward_scale * self.compute_explore_reward(),
+            'seen_locations': self.reward_scale * (len(self.seen_locations)-1) * 0.5
         }
 
     def init_knn(self):
@@ -114,6 +117,7 @@ class Reward:
             self.update_frame_knn_index(obs_flat)
         else:
             self.update_seen_coords(step_count)
+        self.update_seen_locations()
         self.update_exploration_reward()
         self.update_max_event()
         self.update_total_heal_and_death()
@@ -209,3 +213,6 @@ class Reward:
         prog_string += f' sum: {self.total_reward:5.2f}'
         prog_string += f' {self.reader.get_map_location()}'
         print(f'\r{prog_string}', end='', flush=True)
+
+    def update_seen_locations(self):
+        self.seen_locations.add(self.reader.get_map_location())

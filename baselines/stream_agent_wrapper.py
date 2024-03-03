@@ -58,6 +58,7 @@ class StreamWrapper(gym.Wrapper):
             await self.establish_wc_connection()
         if self.websocket is not None:
             try:
+                print('broadcasting!')
                 await self.websocket.send(message)
             except websockets.exceptions.WebSocketException as e:
                 self.websocket = None
@@ -65,5 +66,7 @@ class StreamWrapper(gym.Wrapper):
     async def establish_wc_connection(self):
         try:
             self.websocket = await websockets.connect(self.ws_address)
-        except:
+            print('connected')
+        except Exception as e:
+            print(f"An error occurred: {e}")
             self.websocket = None

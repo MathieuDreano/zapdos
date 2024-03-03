@@ -11,8 +11,8 @@ if __name__ == '__main__':
     ep_length = 2048 * 8
     sess_path = Path(f'sessions/session_{datetime.now().strftime("%Y%m%d_%H%M")}')
     pretrained_model = 'session_4da05e87_main_good/poke_439746560_steps'
-    model_i_like = 'session_20240227_1952/poke_720896_steps'
-    model_to_load_path = ''  # 'sessions/session_20240302_1929/poke_1040384_steps'
+    model_i_like = 'sessions/session_20240302_1929/poke_1040384_steps'
+    model_to_load_path = ''
     env_config = {
                 'headless': True, 'save_final_state': True, 'early_stop': False,
                 'action_freq': 24, 'init_state': '../has_pokedex_nballs.state', 'max_steps': ep_length,
