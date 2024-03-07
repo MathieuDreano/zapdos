@@ -7,19 +7,22 @@ from stream_agent_wrapper import StreamWrapper
 from red_gym_env import RedGymEnv
 
 
-def load_or_create_model(model_to_load_path, env_config, total_timesteps, num_cpu):
+def load_or_create_model(model_to_load_path, env_config, ep_length, n_envs):
 
-    env = SubprocVecEnv([make_env(i, env_config) for i in range(num_cpu)])
+    env = SubprocVecEnv([make_env(rank=i, env_config=env_config) for i in range(n_envs)])
+    tensorboard_log = env_config['session_path']
     if exists(model_to_load_path + '.zip'):
         print('\nloading checkpoint')
         model = PPO.load(model_to_load_path, env=env)
-        model.n_steps = total_timesteps
-        model.n_envs = num_cpu
-        model.rollout_buffer.buffer_size = total_timesteps
-        model.rollout_buffer.n_envs = num_cpu
+        model.tensorboard_log = tensorboard_log
+        model.n_steps = ep_length
+        model.n_envs = n_envs
+        model.rollout_buffer.buffer_size = ep_length
+        model.rollout_buffer.n_envs = n_envs
         model.rollout_buffer.reset()
     else:
-        model = PPO('CnnPolicy', env, verbose=1, n_steps=total_timesteps, batch_size=512, n_epochs=1, gamma=0.999, tensorboard_log=env_config['session_path'])
+        print('\nnew PPO')
+        model = PPO('CnnPolicy', env, verbose=1, n_steps=ep_length, batch_size=512, n_epochs=1, gamma=0.999, tensorboard_log=tensorboard_log)
 
     return model
 
@@ -36,6 +39,7 @@ def make_env(rank, env_config, seed=0):
         env = RedGymEnv(env_config)
         env.reset(seed=(seed + rank))
         if env_config['stream'] is True:
+            print("wrapping env for stream")
             env = StreamWrapper(
                 env,
                 stream_metadata = { # All of this is part is optional
