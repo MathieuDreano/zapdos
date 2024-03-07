@@ -13,7 +13,7 @@ class Reward:
         self.seen_pokemons = 0
 
         # Level
-        self.max_level = 0
+        self.max_levels_sum = 0
         self.levels_satisfied = False
         self.max_opponent_level = 0
 
@@ -45,7 +45,7 @@ class Reward:
 
     def reset(self):
         self.max_event = 0
-        self.max_level = 0
+        self.max_levels_sum = 0
         self.levels_satisfied = False
         self.total_healing = 0
         self.last_party_size = 0
@@ -97,7 +97,7 @@ class Reward:
 
     def compute_level_reward(self):
         # Levels count only quarter after 22 threshold
-        return int(min(22, self.max_level) + (max(0, (self.max_level - 22)) / 4)) * 1
+        return int(min(22, self.max_levels_sum) + (max(0, (self.max_levels_sum - 22)) / 4)) * 1
 
     def compute_explore_reward(self):
         pre_rew = 0.005
@@ -151,7 +151,7 @@ class Reward:
 
     def update_max_level(self):
         # lvl can't decrease
-        self.max_level = max(self.max_level, self.reader.get_levels_sum())
+        self.max_levels_sum = max(self.max_levels_sum, self.reader.get_levels_sum())
 
     def update_frame_knn_index(self, frame_vec):
 
@@ -212,7 +212,7 @@ class Reward:
             prog_string += f' {key}: {val:5.2f}'
         prog_string += f' sum: {self.total_reward:5.2f}'
         prog_string += f' {self.reader.get_map_location()}'
-        print(f'\r{prog_string}', end='', flush=True)
+        print(f'\r{prog_string}', flush=True)
 
     def update_seen_locations(self):
         self.seen_locations.add(self.reader.get_map_location())

@@ -17,7 +17,6 @@ from pyboy.utils import WindowEvent
 class RedGymEnv(Env):
 
     def __init__(self, config=None):
-
         self.debug = config['debug']
         self.instance_id = str(uuid.uuid4())[:8] if 'instance_id' not in config else config['instance_id']
         self.s_path = config['session_path']
@@ -129,8 +128,8 @@ class RedGymEnv(Env):
         reward_delta, new_prog = self.reward_service.update_rewards(obs_flat, self.step_count)
         if self.print_rewards and self.step_count % 100 == 0:
             self.reward_service.print_rewards(self.step_count)
-        if reward_delta < 0 and self.reader.read_hp_fraction() > 0:
-            self.renderer.save_screenshot('neg_reward', self.reward_service.total_reward, self.reset_count)
+        #if reward_delta < 0 and self.reader.read_hp_fraction() > 0:
+        #    self.renderer.save_screenshot('neg_reward', self.reward_service.total_reward, self.reset_count)
 
         # shift over short term reward memory
         self.renderer.recent_memory = np.roll(self.renderer.recent_memory, 3)
@@ -141,8 +140,9 @@ class RedGymEnv(Env):
         # DONE
 
         done = self.check_if_done()
-        if self.step_count % 50 == 0:
-            self.renderer.save_and_print_info()
+        # might be costly to save every time
+        #if self.step_count % 100 == 0:
+        #    self.renderer.save_and_print_info()
 
         if done:
             self.all_runs.append(self.reward_service.get_game_state_rewards())
