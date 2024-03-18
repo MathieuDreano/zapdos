@@ -50,9 +50,9 @@ class Renderer:
                     axis=0)
         return game_pixels_render
 
-    def save_and_print_info(self):
+    def save_and_print_info(self, rank):
         plt.imsave(
-            self.s_path / Path(f'curframe_{self.instance_id}.jpeg'),
+            self.s_path / Path(f'curframe_{self.instance_id}_{rank}.jpeg'),
             self.render(reduce_res=False))
 
 
