@@ -73,7 +73,7 @@ class Reward:
             'op_lvl': self.reward_scale * self.max_opponent_level * 1,
             'dead': self.reward_scale * self.died_count * -0.1,
             'badge': self.reward_scale * self.reader.get_badges() * 5,
-            'seen_pokemons': self.reward_scale * self.seen_pokemons * 1,
+            'seen_pokemons': self.reward_scale * self.seen_pokemons * 0.5,
             'explore': self.reward_scale * self.compute_explore_reward(),
             'seen_locations': self.reward_scale * (len(self.seen_locations)-1) * 0.5
         }
@@ -103,7 +103,7 @@ class Reward:
         pre_rew = 0.005
         post_rew = 0.01
         if not self.levels_satisfied:
-            return (self.cur_size * 0.005) * self.explore_weight
+            return (self.cur_size * pre_rew) * self.explore_weight
         else:
             return ((self.base_explore * pre_rew) + (self.cur_size * post_rew)) * self.explore_weight
 

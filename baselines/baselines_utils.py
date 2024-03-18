@@ -36,17 +36,17 @@ def make_env(rank, env_config, seed=0):
     :param rank: (int) index of the subprocess
     """
     def _init():
-        env = RedGymEnv(env_config)
+        env = RedGymEnv(env_config, rank)
         env.reset(seed=(seed + rank))
         if env_config['stream'] is True:
-            print("wrapping env for stream")
+            print("📽️Wrapping env for stream")
             env = StreamWrapper(
                 env,
                 stream_metadata = { # All of this is part is optional
-                    "user": "MATHIEU", # choose your own username
-                    "env_id": env_config['instance_id'], # environment identifier
-                    "color": "#d900ff", # choose your color :)
-                    "extra": "", # any extra text you put here will be displayed
+                    "user": "MATHIEU",  # choose your own username
+                    "env_id": env_config['instance_id']+"_"+rank,  # environment identifier
+                    "color": "#d900ff",  # choose your color :)
+                    "extra": "",  # any extra text you put here will be displayed
                 }
             )
         return env

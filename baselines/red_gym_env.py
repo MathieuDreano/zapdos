@@ -16,7 +16,8 @@ from pyboy.utils import WindowEvent
 
 class RedGymEnv(Env):
 
-    def __init__(self, config=None):
+    def __init__(self, config=None, rank=0):
+        self.rank = rank
         self.debug = config['debug']
         self.instance_id = str(uuid.uuid4())[:8] if 'instance_id' not in config else config['instance_id']
         self.s_path = config['session_path']
@@ -76,7 +77,7 @@ class RedGymEnv(Env):
         )
 
         if not config['headless']:
-            self.pyboy.set_emulation_speed(6)
+            self.pyboy.set_emulation_speed(0)
 
         self.reader = ReaderPyBoy(self.pyboy)
 
@@ -126,10 +127,8 @@ class RedGymEnv(Env):
         # REWARD
 
         reward_delta, new_prog = self.reward_service.update_rewards(obs_flat, self.step_count)
-        if self.print_rewards and self.step_count % 100 == 0:
+        if self.print_rewards and self.step_count % 128 == 0:
             self.reward_service.print_rewards(self.step_count)
-        #if reward_delta < 0 and self.reader.read_hp_fraction() > 0:
-        #    self.renderer.save_screenshot('neg_reward', self.reward_service.total_reward, self.reset_count)
 
         # shift over short term reward memory
         self.renderer.recent_memory = np.roll(self.renderer.recent_memory, 3)
@@ -137,31 +136,34 @@ class RedGymEnv(Env):
         self.renderer.recent_memory[0, 1] = min(new_prog[1] * 64, 255)
         self.renderer.recent_memory[0, 2] = min(new_prog[2] * 128, 255)
 
+        # might be costly to save every time
+        if self.step_count % 128 == 0:
+            self.renderer.save_and_print_info(self.rank)
+
         # DONE
 
         done = self.check_if_done()
-        # might be costly to save every time
-        #if self.step_count % 100 == 0:
-        #    self.renderer.save_and_print_info()
-
         if done:
-            self.all_runs.append(self.reward_service.get_game_state_rewards())
-            with open(self.s_path / Path(f'all_runs_{self.instance_id}.json'), 'w') as f:
-                json.dump(self.all_runs, f)
-            pd.DataFrame(self.agent_stats).to_csv(
-                self.s_path / Path(f'agent_stats_{self.instance_id}.csv.gz'), compression='gzip', mode='a')
-
-            if self.print_rewards:
-                print('', flush=True)
-                if self.save_final_state:
-                    self.renderer.save_final_state(obs_memory, self.reset_count, self.reward_service.total_reward)
-
-            if self.save_video and done:
-                self.renderer.full_frame_writer.close()
-                self.renderer.model_frame_writer.close()
+            self.on_done(obs_memory)
 
         self.step_count += 1
         return obs_memory, reward_delta * 0.1, False, done, {}
+
+    def on_done(self, obs_memory):
+        self.all_runs.append(self.reward_service.get_game_state_rewards())
+        with open(self.s_path / Path(f'all_runs_{self.instance_id}.json'), 'w') as f:
+            json.dump(self.all_runs, f)
+        pd.DataFrame(self.agent_stats).to_csv(
+            self.s_path / Path(f'agent_stats_{self.instance_id}.csv.gz'), compression='gzip', mode='a')
+
+        if self.print_rewards:
+            print('', flush=True)
+            if self.save_final_state:
+                self.renderer.save_final_state(obs_memory, self.reset_count, self.reward_service.total_reward)
+
+        if self.save_video:
+            self.renderer.full_frame_writer.close()
+            self.renderer.model_frame_writer.close()
 
     def run_action_on_emulator(self, action):
         # press button then release after some steps
