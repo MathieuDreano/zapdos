@@ -22,7 +22,6 @@ class PokeRedEnv(Env):
             self, gb_path, init_state,
             max_steps=2048*8, headless=True,
             action_frequency=24, downscale_factor=2):
-        
         self.headless = headless
         self.init_state = init_state
         self.act_freq = action_frequency
